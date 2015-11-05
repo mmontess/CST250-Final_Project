@@ -1,0 +1,158 @@
+# ********** DO NOT MODIFY THIS ASM FILE **********
+bubble_cycles:
+	.word 0
+insertion_cycles:
+	.word 0
+wildcard_cycles:
+	.word 0
+
+fails_sum:
+	.word 0
+	.word 0
+	.word 0
+
+# Each is 11 characters
+cycle_score_message:
+	.asciiw "Bubble:    "
+	.asciiw "Insertion: "
+	.asciiw "Wildcard:  "
+
+bcd_storage:
+	.space 10
+
+cycle_fail_message:
+	.asciiw "  FAILED  "
+
+
+# a3 - array number character
+print_validator_output:
+	push $ra
+	move $s4, $a3
+	# Print Sort Algorithm Name
+	#calculate cycle_score_message address
+	li $t3, 11
+	li $t4, cycle_score_message
+	mullo $s3, $s4, $t3	# sort index * number of characters in message
+	addu $s3, $s3, $t4	# address offset
+
+	li $t1, 10	# Character total
+	li $t2, 0	# Counter
+	cycle_message_print_loop:
+		lw $a3, 0($s3)
+		jal put_char
+		addiu $s3, $s3, 4 # increment array address during branch delay slot
+		bne $t2, $t1 cycle_message_print_loop
+		addiu $t2, $t2, 1 # increment counter during branch delay slot
+
+	
+	
+	# Check if algorithm has failed
+	li $t4, fails_sum
+	addu $t4, $t4, $s4
+	lw $t5, 0($t4)	#number of fails
+	beq $t5, $0, convert_cycles_to_BCD
+	nop
+	li $s3, cycle_fail_message
+	addiu $t6, $s3, 36	#address of last character in string
+	addiu $t5, $t5, 48	#convert to ASCII char
+	sw $t5, 0($t6)	#change message to include fail count
+	j start_print_cycles_message
+	nop
+
+	convert_cycles_to_BCD:
+	li $a3, bubble_cycles
+	addu $a3, $a3, $s4
+	call convert_to_bcd
+	li $s3, bcd_storage
+
+	start_print_cycles_message:
+	li $t1, 9 # Character total
+	li $t2, 0	# Counter
+	validator_print_cycles:
+		lw $a3, 0($s3)
+		jal put_char
+		addiu $s3, $s3, 4 # increment array address during branch delay slot
+		bne $t2, $t1 validator_print_cycles
+		addiu $t2, $t2, 1 # increment counter during branch delay slot
+
+	li $a3, 10 # New Line
+	jal put_char
+	nop
+	pop $ra
+	return
+
+
+convert_to_bcd:
+	push $ra
+	li $s3, bcd_storage
+	lw $t1, 0($a3)	#get value
+	#set 10's place followed call subtract function to store bcd
+	li $s6, 1000000000	#10
+	jal base10_subtract
+	nop
+	li $s6, 100000000 	#9
+	jal base10_subtract
+	nop
+	li $s6, 10000000	#8
+	jal base10_subtract
+	nop
+	li $s6, 1000000	#7
+	jal base10_subtract
+	nop
+	li $s6, 100000	#6
+	jal base10_subtract
+	nop
+	li $s6, 10000	#5
+	jal base10_subtract
+	nop
+	li $s6, 1000	#4
+	jal base10_subtract
+	nop
+	li $s6, 100	#3
+	jal base10_subtract
+	nop
+	li $s6, 10		#2
+	jal base10_subtract
+	nop
+	li $s6, 1		#1
+	jal base10_subtract
+	nop
+	pop $ra
+	return
+
+
+
+#Description: repeats $s3 - $s6 as many times as possilbe, where s6 is a multiple of 10
+base10_subtract:
+	li $t2, 0	#subtraction counter
+	base10_subtract_loop:
+		slt $t3, $t1, $s6
+		bne $t3, $0, base10_subtract_loop_end
+		nop
+		addiu $t2, $t2, 1
+		subu $t1, $t1, $s6	#subtract power of 10
+		j base10_subtract_loop
+		nop
+	base10_subtract_loop_end:
+	addiu $t2, $t2, 48	#convert to ascii
+	sw $t2, 0($s3)	#store to BCD array
+	addiu $s3, $s3, 4	#increment BCD array pointer
+	jr $ra
+	nop
+
+
+
+#Description: Writes value in $a3 to UART
+# Uses: s0, s1, t0, 
+put_char:
+	li $s0 0xF0000000	# UART
+	li $s1 0b01	# Status register bit mask
+	put_char_busy_wait:
+		lw $t0, 4($s0)	#load status register
+		and $t0, $t0, $s1	#mask for clear to send
+		bne $t0, $s1, put_char_busy_wait
+		nop
+	sw $a3, 12($s0)	#store in send buffer
+	sw $s1, 0($s0)	#command register: send
+	jr $ra
+	nop

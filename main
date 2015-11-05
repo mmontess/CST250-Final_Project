@@ -1,0 +1,53 @@
+# ********** DO NOT MODIFY THIS ASM FILE **********
+# Each function is passed the starting address (smallest address) of an array via $a0 and the number of elements in the array via $a1
+# Sort the array so that it starts with the smallest value and ends with the largest value
+# Inputs will all be positive integers
+
+.org 0x10000000
+j main
+nop
+
+array1:
+	.space 1024
+array2:
+	.space 1024
+array3:
+	.space 1024
+
+main:
+	li $sp, 0x10FFFFFC	#stack pointer
+	li $s0, 0xF0600000	#timer
+	call get_array
+	nop
+	move $a2, $v0	#accumulator
+	move $a1, $v1	#array size
+	
+
+	li $a3, bubble_cycles
+	li $a0, array1
+	sw $0, 0($s0)	# Zero timer
+	call bubble_sort
+	jal timer_stop
+	nop
+
+
+	li $a3, insertion_cycles
+	li $a0, array2
+	sw $0, 0($s0)	# Zero timer
+	call insertion_sort
+	jal timer_stop
+	nop
+
+
+	li $a3, wildcard_cycles
+	li $a0, array3
+	sw $0, 0($s0)	# Zero timer
+	call wildcard_sort
+	jal timer_stop
+	nop
+
+
+	call sort_validator
+
+	j main
+	nop
