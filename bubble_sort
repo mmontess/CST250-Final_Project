@@ -6,6 +6,26 @@
 # http://en.wikipedia.org/wiki/Bubble_sort
 
 bubble_sort:
-	#TODO
+	whileLoop: 
+   li $t8, 1
+   li $t7, 4
+   add $t9, $0, $0 #flag chck if list is sorted
+  
+ifLoop: 
+   lw $t0, 0($a0)
+   lw $t1, 4($a0)
+   slt $t2, $t0, $t1
+   beq $t2, $0, check
+   nop
+   add $t9 $zero, $t8
+   sw $t0, 4($a0 #swap
+   sw $t1, 0($a0) #swap
+
+check:
+  addi $a0, $a0, $t7
+  bne $a0, $a1 ifLoop
+  nop
+  bne $t9, $0, whileLoop  
+  nop
 
 	return
