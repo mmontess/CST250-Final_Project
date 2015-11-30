@@ -4,8 +4,36 @@
 #	$a1 - number of elements in array
 # A comparison of a number of sorting algorithms you might attempt can be found here:
 # https://en.wikipedia.org/wiki/Sorting_algorithm#Comparison_of_algorithms
+#$t0 = First Unsorted Location, $t1 = Min, $t2 = Current Item Location $t3 = Current Item Value, $t4 = First Loop Counter, 
+#$t5 = Second Loop Counter, $t6 = Jump Boolean Holder, $t7 = current min location, $t8 = temp holder
 
 wildcard_sort:
-	#TODO
-	
-	return
+	move $t0, $a0 				#Store the location of the array at $t0
+	FIRST_LOOP:
+		lw $t1, 0($t0)			#Load the lowest unsorted value to min
+		addiu $t5, $t4, 1			#Set the second loop counter to the first loop counter + 1
+		addiu $t2, $t0, 4			#Set the current item location to the first unsorted location + 4
+		SECOND_LOOP:
+			lw $t3, 0($t2)		#Load the current item into $t3
+			slt $t6, $t3, $t1	 	#Is current less than min?
+			beq $t6, $0, NOT_LESS	#If not, jump past next instruction
+			nop
+			move $t1, $t3		#If true, store the value at current in min
+			move $t7, $t2		#Then store the location of current at $t7
+			NOT_LESS:
+			addiu $t2, $t2, 4		#Increment the current item location
+			addiu $t5, $t5, 1		#Increment second loop counter
+			bne $a1, $t5 SECOND_LOOP	#If the counter is not equal to the number of array elements, repeat loop.
+			nop
+		lw $t8, 0($t0)			#Load the value of the first unsorted location into temp
+		beq $t8, $t1 NO_CHANGE		#If temp = min, jump past swap function
+		nop
+		sw $t1, 0($t0)			#Else, store min at first unsorted location,
+		sw $t8, 0($t7)			#And store temp at the previous location of the current min.
+		NO_CHANGE:
+		addiu $t0, $t0, 4			#Increment the location of the first unsorted value.
+		addiu $t4, $t4, 1			#Increment first loop counter
+		addiu $t9, $t4, 1			#Add 1 to the current counter, just for comparison.
+		bne $t9, $a1 FIRST_LOOP		#If the counter is not equal to the number of array elements, repeat loop.
+		nop		
+return
