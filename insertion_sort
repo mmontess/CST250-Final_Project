@@ -6,6 +6,46 @@
 # http://en.wikipedia.org/wiki/Insertion_sort
 
 insertion_sort:
-	#TODO
+	li $s2, 1 
+	move $t4, $a1 #Counter for the loop
+
+	MyLoop:
+
+		slt $t3, $s2, $a1 			#Check to see if length equals 1
+		beq $t3, $0, sorted 			#Branches when i is equal to length
+		nop
+		move $t4, $s2
+		InnerLoop:
+			
+			li $t5, 4 			#load 4
+			mullo $t5, $t4, $t5 		#multiply n by 4
+			addu $t0, $a0, $t5 		#Add result to get nth element of array
+
+			lw $s0, 0($t0) 		#Store nth element of array 
+			addiu $t1, $t0, -4 		#Get previous element by subtracting 4
+			lw $s1, 0($t1) 		#Store n-1 element of array 
+
+			slt $t3, $s0, $s1 		#checks if a[k] is less than a[k-1]
+			beq $t3, $0, break_loop 	#if a[k] = a[k-1] move to fail
+			nop
+
+			slt $t3, $0, $t4 		#checks if 1 is less than k
+			beq $t3, $0, break_loop 	#break loop if k is greater than 1
+			nop
 	
+			sw $s0, 0($t1) 
+			sw $s1, 0($t0) 		#Swap two array elements
+		
+			addiu $t4, $t4, -1 		#decrement j
+			j InnerLoop
+			nop
+
+		break_loop:			#jump destination when loop is broken
+
+		addiu $s2, $s2, 1
+		
+		j MyLoop
+		nop
+	sorted:					#when the list is sorted
 	return
+	nop
